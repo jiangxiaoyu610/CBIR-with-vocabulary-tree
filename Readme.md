@@ -13,10 +13,10 @@ More details in the paper as follows.
 
 ## How to use 
   
-### 0
+### 0 prepare
 First you should put your dataset in the `./data`, I've used the `The Oxford Buildings Dataset`.
  
-### 1 
+### 1 build_feature_base.py
 
 `build_feature_base.py` is for build vocabulary tree with image features. You can use the command to start:  
 
@@ -24,15 +24,16 @@ First you should put your dataset in the `./data`, I've used the `The Oxford Bui
 
 depth_param is to set depth of tree, branch_param is to set branch of node, and rate is to set the percent of usage of your data set. 
  
-### 2
+### 2 performance_testing.py
 `performance_testing.py` is for test the trained vocabulary tree. Before it, **you must finish running `build_feature_base.py`**  
 You can use the command to start:  
 
 * `python performance_testing.py --depth depth_param --branch branch_param --train_set_rate rate` 
 
-These params is for locate the vocabulary tree file. 
- 
-### 3
+These params is for locate the vocabulary tree file.  
+The code use the offical oxford building dataset testing funtion, which in the `./docs`.
+.. 
+### 3 search_picture.py
 `search_picture.py` is for retrieav similar picture in the image data base with given image file. 
 You can use the command to start: 
 
