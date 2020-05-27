@@ -1,0 +1,5 @@
+Recognition with a Vocabulary Tree, Nister and Stewenius, cvpr 2006;
+
+1）http://www.yyearth.com/index.php?aid=241
+2）https://zhuanlan.zhihu.com/p/20550181
+3）https://zhuanlan.zhihu.com/p/20554144
