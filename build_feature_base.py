@@ -186,7 +186,7 @@ def process():
         4）储存每幅图片的特征向量。
     :return:
     """
-    logger = Logger('./logs/{}_log.txt'.format(time.strftime("%Y-%m-%d-%H-%M-%S", time.localtime())))
+    logger = Logger('./logs/{}_build_log.txt'.format(time.strftime("%Y-%m-%d-%H-%M-%S", time.localtime())))
 
     files_list = get_train_data(TRAIN_SET_RATE)
     image_descriptors_dict = generate_descriptors(files_list, logger)

@@ -5,6 +5,7 @@ import re
 import time
 
 from common import *
+from logger import Logger
 from search_picture import *
 
 
@@ -136,6 +137,8 @@ def process(depth, k_per_level, train_set_rate):
     注：此处 junk 并非负例，而是被遮挡超过 75% 的正例，但是鉴于 OB 官网用此计算方法，此处我们保持统一。
     :return:
     """
+    logger = Logger('./logs/{}_testing_log.txt'.format(time.strftime("%Y-%m-%d-%H-%M-%S", time.localtime())))
+
     query_dict, positive_dict, negative_dict = load_query_data()
     vocabulary_tree, word_vector_dict, idf = load_related_data(depth, k_per_level, train_set_rate)
 
@@ -147,21 +150,22 @@ def process(depth, k_per_level, train_set_rate):
 
         image_file = DATA_FOLDER + query + '.jpg'
 
-        image_descriptors = generate_descriptors([image_file])
+        image_descriptors = generate_descriptors([image_file], logger)
 
-        image_feature, _ = get_image_feature(image_descriptors, vocabulary_tree, idf)
+        image_feature, _ = get_image_feature(image_descriptors, vocabulary_tree, logger, idf)
         retrieve_image_feature = list(image_feature.values())[0]
 
-        similar_image_files = find_similar_image(retrieve_image_feature, word_vector_dict, top_n=5063)
+        similar_image_files = find_similar_image(retrieve_image_feature, word_vector_dict)
 
         ap = compute_ap(similar_image_files, pos_set, neg_set)
         average_precision.append(ap)
 
         count += 1
-        print("finish {}/{} query, used: {} seconds".format(count, len(query_dict), time.time()-begin))
+        logger.write("finish {}/{} query, used: {} seconds".format(count, len(query_dict), time.time()-begin))
 
-    print("mAP:", np.mean(average_precision))
+    logger.write("mAP: {}".format(np.mean(average_precision)))
 
+    logger.close()
     return
 
 

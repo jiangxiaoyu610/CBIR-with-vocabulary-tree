@@ -1,6 +1,8 @@
+import time
 import matplotlib.pyplot as plt
 
 from common import *
+from logger import Logger
 from build_feature_base import generate_descriptors, get_image_feature
 
 # 由于展示时每行 3 张图片，因此建议 TOP N 为 3 的倍数。
@@ -76,11 +78,12 @@ def read_image_by_id(image_id, data_folder='./data/', ext='.jpg'):
     return image
 
 
-def show_result(image_file, similar_image_files):
+def show_result(image_file, similar_image_files, logger):
     """
     展示图像检索结果。
     :param image_file:
     :param similar_image_files:
+    :param logger:
     :return:
     """
     n_rows = get_n_rows(similar_image_files)
@@ -99,6 +102,7 @@ def show_result(image_file, similar_image_files):
         plt.title('Similar image rank: {}'.format(i + 1), fontsize=8, y=-0.25)
         plt.xticks([])
         plt.yticks([])
+        logger.write("No.{} similar image is {}".format((i+1), image_id))
 
     plt.show()
     plt.close()
@@ -106,7 +110,7 @@ def show_result(image_file, similar_image_files):
     return
 
 
-def process(depth, k_per_level, train_set_rate):
+def process(image_file, depth, k_per_level, train_set_rate):
     """
     本代码用于完成图像检索功能。
     具体步骤如下：
@@ -116,28 +120,30 @@ def process(depth, k_per_level, train_set_rate):
     注：由于图片的特征向量已经做过 L2 正则化，因此点积相当于计算余弦距离。
     :return:
     """
-    image_file = './data/all_souls_000006.jpg'
+    logger = Logger('./logs/{}_testing_log.txt'.format(time.strftime("%Y-%m-%d-%H-%M-%S", time.localtime())))
 
     vocabulary_tree, word_vector_dict, idf = load_related_data(depth, k_per_level, train_set_rate)
 
-    image_descriptors = generate_descriptors([image_file])
+    image_descriptors = generate_descriptors([image_file], logger)
 
-    image_feature, _ = get_image_feature(image_descriptors, vocabulary_tree, idf)
+    image_feature, _ = get_image_feature(image_descriptors, vocabulary_tree, logger, idf)
     retrieve_image_feature = list(image_feature.values())[0]
 
     similar_image_files = find_similar_image(retrieve_image_feature, word_vector_dict)
 
-    show_result(image_file, similar_image_files)
+    show_result(image_file, similar_image_files, logger)
 
+    logger.close()
     return
 
 
 if __name__ == '__main__':
     parse = argparse.ArgumentParser()
+    parse.add_argument('--image_file', help="image file to be search")
     parse.add_argument('--depth', help="depth of vocabulary tree")
     parse.add_argument('--branch', help="branch of vocabulary tree")
     parse.add_argument('--train_set_rate', help='percent of usage of data folder')
 
     args = parse.parse_args()
 
-    process(args.depth, args.branch, args.train_set_rate)
+    process(args.image_file, args.depth, args.branch, args.train_set_rate)
