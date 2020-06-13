@@ -9,6 +9,43 @@ from logger import Logger
 from search_picture import *
 
 
+def compute_precision(rank_list, pos_set, neg_seg):
+    """
+    计算 precision。
+    :param rank_list:
+    :param pos_set:
+    :param neg_seg:
+    :return:
+    """
+    for i in range(len(rank_list)):
+        if rank_list[i] in pos_set:
+            return 1
+
+    return 0
+
+
+def compute_common_ap(rank_list, pos_set, neg_set):
+    """
+    计算普通的 mAP 指标。
+    详情见：https://zhuanlan.zhihu.com/p/35983818
+    :param rank_list:
+    :param pos_set:
+    :param neg_set:
+    :return:
+    """
+    ap = 0
+    positive = 0
+    for i in range(len(rank_list)):
+        if rank_list[i] in pos_set:
+            positive += 1
+            ap += (positive / (i+1))
+
+    if positive != 0:
+        ap = ap / positive
+
+    return ap
+
+
 def compute_ap(rank_list, pos_set, neg_set):
     """
     利用 Oxford Building 给定的 average precision 计算方法计算 ap。
@@ -150,14 +187,16 @@ def process(depth, k_per_level, train_set_rate):
 
         image_file = DATA_FOLDER + query + '.jpg'
 
-        image_descriptors = generate_descriptors([image_file], logger)
+        image_descriptors = generate_descriptors_for_testing([image_file], logger)
 
         image_feature, _ = get_image_feature(image_descriptors, vocabulary_tree, logger, idf)
         retrieve_image_feature = list(image_feature.values())[0]
 
-        similar_image_files = find_similar_image(retrieve_image_feature, word_vector_dict)
+        similar_image_files = find_similar_image(retrieve_image_feature, word_vector_dict, top_n=-1)
 
-        ap = compute_ap(similar_image_files, pos_set, neg_set)
+        # ap = compute_ap(similar_image_files, pos_set, neg_set)
+        ap = compute_common_ap(similar_image_files, pos_set, neg_set)
+        # ap = compute_precision(similar_image_files, pos_set, neg_set)
         average_precision.append(ap)
 
         count += 1

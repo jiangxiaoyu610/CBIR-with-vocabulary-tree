@@ -12,7 +12,7 @@ from vocabulary_tree import VocabularyTree
 # 对于 oxbuild 数据集来说树节点最多100万左右。
 DEPTH = 7
 K_PER_LEVEL = 10
-TRAIN_SET_RATE = 0.002  # 用图片文件夹中的多少比例来构建树。
+TRAIN_SET_RATE = 1  # 用图片文件夹中的多少比例来构建树。
 
 random.seed(10)
 

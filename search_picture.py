@@ -3,10 +3,18 @@ import matplotlib.pyplot as plt
 
 from common import *
 from logger import Logger
-from build_feature_base import generate_descriptors, get_image_feature
+from build_feature_base import get_extractor, get_image_feature
 
 # 由于展示时每行 3 张图片，因此建议 TOP N 为 3 的倍数。
-TOP_N = 3
+TOP_N = 6
+
+
+def bgr2rgb(im):
+    im = im.copy()
+    temp = im[:, :, 0].copy()
+    im[:, :, 0] = im[:, :, 2].copy()
+    im[:, :, 2] = temp
+    return im
 
 
 def load_related_data(depth, k_per_level, train_set_rate):
@@ -78,6 +86,31 @@ def read_image_by_id(image_id, data_folder='./data/', ext='.jpg'):
     return image
 
 
+def generate_descriptors_for_testing(files_list, logger, method='sift'):
+    """
+    预测时使用的提取描述算子函数
+    """
+    image_descriptors_dict = {}
+    extractor = get_extractor(method)
+
+    logger.write('\nbegin extract image feature:')
+    for i, image_path in enumerate(files_list):
+        begin = time.time()
+        file = os.path.basename(image_path)
+        image_id = file.split('.')[0]
+
+        image = cv2.imread(image_path)
+        try:
+            key_points, descriptors = extractor.detectAndCompute(image, None)
+            image_descriptors_dict[image_id] = descriptors
+        except Exception as e:
+            print('error: {}'.format(e))
+
+        logger.write("finish extract {}/{} image feature, used: {}".format(i + 1, len(files_list), time.time() - begin))
+
+    return image_descriptors_dict
+
+
 def show_result(image_file, similar_image_files, logger):
     """
     展示图像检索结果。
@@ -89,17 +122,19 @@ def show_result(image_file, similar_image_files, logger):
     n_rows = get_n_rows(similar_image_files)
 
     image = cv2.imread(image_file)
+    image = bgr2rgb(image)
     plt.subplot(n_rows, 3, 2)
     plt.imshow(image)
-    plt.title("input image", fontsize=8)
+    plt.title("Query", fontsize=8)
     plt.xticks([])
     plt.yticks([])
 
     for i, image_id in enumerate(similar_image_files):
         similar_image = read_image_by_id(image_id)
+        similar_image = bgr2rgb(similar_image)
         plt.subplot(n_rows, 3, i + 4)
         plt.imshow(similar_image)
-        plt.title('Similar image rank: {}'.format(i + 1), fontsize=8, y=-0.25)
+        plt.title('rank: {}'.format(i + 1), fontsize=8, y=-0.25)
         plt.xticks([])
         plt.yticks([])
         logger.write("No.{} similar image is {}".format((i+1), image_id))
@@ -124,7 +159,7 @@ def process(image_file, depth, k_per_level, train_set_rate):
 
     vocabulary_tree, word_vector_dict, idf = load_related_data(depth, k_per_level, train_set_rate)
 
-    image_descriptors = generate_descriptors([image_file], logger)
+    image_descriptors = generate_descriptors_for_testing([image_file], logger)
 
     image_feature, _ = get_image_feature(image_descriptors, vocabulary_tree, logger, idf)
     retrieve_image_feature = list(image_feature.values())[0]
